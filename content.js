@@ -10,6 +10,10 @@
   if (window.__vaultExportInjected) return;
   window.__vaultExportInjected = true;
 
+  // Guard: chrome.runtime becomes undefined in orphaned content scripts
+  // (happens when extension is reloaded while the tab stays open)
+  if (typeof chrome === 'undefined' || !chrome?.runtime) return;
+
   // ===================================================================
   // PLATFORM DETECTION
   // ===================================================================
@@ -68,8 +72,12 @@
       showToast('No conversation detected. Open a chat first.', 'error');
       return;
     }
-    // Signal popup to export (popup handles format selection)
-    // For button click we use the last saved preferences
+    // Guard against orphaned content script after extension reload
+    if (!chrome?.runtime?.sendMessage) {
+      showToast('Extension reloaded — please refresh this page first.', 'error');
+      return;
+    }
+
     chrome.runtime.sendMessage({
       type: 'EXPORT_CURRENT',
       payload: {
@@ -192,6 +200,7 @@
   // ===================================================================
   // MESSAGE LISTENER (from popup)
   // ===================================================================
+  if (!chrome?.runtime?.onMessage) return;
   chrome.runtime.onMessage.addListener((msg) => {
     if (msg.type === 'GET_PAGE_CONTEXT') {
       return { platform, conversationId: getConversationId(), url: location.href };
