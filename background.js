@@ -474,8 +474,9 @@ async function triggerDownload(content, filename) {
     const base64 = arrayBufferToBase64(buffer);
     url = `data:application/zip;base64,${base64}`;
   } else {
-    // Text content — encode as data URL
-    url = `data:text/plain;charset=utf-8,${encodeURIComponent(String(content))}`;
+    // Use octet-stream so Chrome/Brave honours the filename parameter and doesn't
+    // override the extension based on MIME type (e.g. text/plain → .txt)
+    url = `data:application/octet-stream,${encodeURIComponent(String(content))}`;
   }
   return chrome.downloads.download({ url, filename, saveAs: false });
 }

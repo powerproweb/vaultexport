@@ -65,14 +65,26 @@ document.addEventListener('DOMContentLoaded', async () => {
 // =====================================================================
 async function detectContext() {
   try {
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (!tab) return showNoContext();
+    // Use lastFocusedWindow so we get the browser tab, not the popup's own window
+    const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+    if (!tab?.url) return showNoContext();
 
-    const res = await chrome.runtime.sendMessage({ type: 'GET_CONTEXT' });
-    if (res?.error || !res?.platform) return showNoContext();
+    const url = tab.url;
+    let platform = null, conversationId = null;
 
-    context = res;
-    showContext(res);
+    if (url.includes('chatgpt.com') || url.includes('chat.openai.com')) {
+      platform = 'chatgpt';
+      const m = url.match(/\/c\/([a-zA-Z0-9_-]+)/);
+      conversationId = m?.[1] || null;
+    } else if (url.includes('claude.ai')) {
+      platform = 'claude';
+      const m = url.match(/\/chat\/([a-f0-9-]{36})/);
+      conversationId = m?.[1] || null;
+    }
+
+    if (!platform) return showNoContext();
+    context = { platform, conversationId, url };
+    showContext(context);
   } catch {
     showNoContext();
   }
