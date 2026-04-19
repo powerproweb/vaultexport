@@ -65,13 +65,36 @@ async function getClaudeOrgId() {
 // =====================================================================
 // CHATGPT — FETCH & PARSE
 // =====================================================================
-async function fetchChatGPT(path) {
-  const base = 'https://chatgpt.com';
-  const res = await fetch(`${base}${path}`, {
+let _chatgptToken = null;
+let _chatgptTokenExpiry = 0;
+
+async function getChatGPTToken() {
+  // Cache token for 5 minutes
+  if (_chatgptToken && Date.now() < _chatgptTokenExpiry) return _chatgptToken;
+  const res = await fetch('https://chatgpt.com/api/auth/session', {
     credentials: 'include',
-    headers: { 'Content-Type': 'application/json' },
   });
-  if (res.status === 401) throw new Error('Not logged in to ChatGPT. Please sign in and try again.');
+  if (!res.ok) throw new Error('Not logged in to ChatGPT. Please sign in at chatgpt.com and try again.');
+  const data = await res.json();
+  if (!data?.accessToken) throw new Error('Could not get ChatGPT session token. Make sure you are logged in.');
+  _chatgptToken = data.accessToken;
+  _chatgptTokenExpiry = Date.now() + 5 * 60 * 1000;
+  return _chatgptToken;
+}
+
+async function fetchChatGPT(path) {
+  const token = await getChatGPTToken();
+  const res = await fetch(`https://chatgpt.com${path}`, {
+    credentials: 'include',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+  if (res.status === 401) {
+    _chatgptToken = null; // Clear cached token on 401
+    throw new Error('ChatGPT session expired. Please reload the chatgpt.com tab and try again.');
+  }
   if (!res.ok) throw new Error(`ChatGPT API error ${res.status}: ${res.statusText}`);
   return res.json();
 }
