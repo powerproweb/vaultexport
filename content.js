@@ -78,25 +78,38 @@
       return;
     }
 
-    chrome.runtime.sendMessage({
-      type: 'EXPORT_CURRENT',
-      payload: {
-        platform,
-        conversationId: convId,
-        format: null, // background will use saved default
-        recallOsMode: false,
-      },
-    }, (res) => {
-      if (chrome.runtime.lastError) {
-        showToast('Extension error: ' + chrome.runtime.lastError.message, 'error');
-        return;
+    try {
+      chrome.runtime.sendMessage({
+        type: 'EXPORT_CURRENT',
+        payload: {
+          platform,
+          conversationId: convId,
+          format: null,
+          recallOsMode: false,
+        },
+      }, (res) => {
+        if (chrome.runtime.lastError) {
+          const msg = chrome.runtime.lastError.message || '';
+          if (msg.includes('invalidated') || msg.includes('disconnected')) {
+            showToast('Extension was reloaded — please refresh this page (F5) to reconnect.', 'error');
+          } else {
+            showToast('Extension error: ' + msg, 'error');
+          }
+          return;
+        }
+        if (res?.error) {
+          showToast('Export failed: ' + res.error, 'error');
+        } else if (res?.success) {
+          showToast(`✓ Exported "${res.title}" (${res.messageCount} messages)`, 'success');
+        }
+      });
+    } catch (err) {
+      if (err.message?.includes('invalidated') || err.message?.includes('Extension context')) {
+        showToast('Extension was reloaded — please refresh this page (F5) to reconnect.', 'error');
+      } else {
+        showToast('Unexpected error: ' + err.message, 'error');
       }
-      if (res?.error) {
-        showToast('Export failed: ' + res.error, 'error');
-      } else if (res?.success) {
-        showToast(`✓ Exported "${res.title}" (${res.messageCount} messages)`, 'success');
-      }
-    });
+    }
   }
 
   // Platform-specific injection targets
