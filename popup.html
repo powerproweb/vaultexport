@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>VaultExport</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+      <polyline points="7 10 12 15 17 10"/>
+      <line x1="12" y1="15" x2="12" y2="3"/>
+    </svg>
+    <span class="logo-text">VaultExport</span>
+  </div>
+  <div class="header-actions">
+    <a href="#" id="open-options" title="Settings">⚙️</a>
+    <a href="#" id="open-browse" title="Browse all conversations">📚</a>
+  </div>
+</div>
+
+<!-- Context Display -->
+<div id="context-area">
+  <div id="no-context" class="state-msg">
+    <div class="state-icon">💬</div>
+    <div>Open a ChatGPT or Claude conversation<br>then click Export.</div>
+  </div>
+  <div id="has-context" class="hidden">
+    <div class="context-badge" id="platform-badge">—</div>
+    <div class="context-title" id="conv-title">Loading…</div>
+  </div>
+</div>
+
+<!-- Format Selector -->
+<div id="export-panel" class="hidden">
+
+  <div class="section-label">Export Format</div>
+  <div class="format-grid" id="format-grid">
+    <button class="fmt-btn active" data-fmt="markdown">
+      <span class="fmt-icon">📝</span>
+      <span class="fmt-name">Markdown</span>
+      <span class="fmt-ext">.md</span>
+    </button>
+    <button class="fmt-btn" data-fmt="json">
+      <span class="fmt-icon">🗄️</span>
+      <span class="fmt-name">JSON</span>
+      <span class="fmt-ext">.json</span>
+    </button>
+    <button class="fmt-btn" data-fmt="html">
+      <span class="fmt-icon">🌐</span>
+      <span class="fmt-name">HTML</span>
+      <span class="fmt-ext">.html</span>
+    </button>
+    <button class="fmt-btn" data-fmt="text">
+      <span class="fmt-icon">📃</span>
+      <span class="fmt-name">Text</span>
+      <span class="fmt-ext">.txt</span>
+    </button>
+    <button class="fmt-btn" data-fmt="csv">
+      <span class="fmt-icon">📊</span>
+      <span class="fmt-name">CSV</span>
+      <span class="fmt-ext">.csv</span>
+    </button>
+  </div>
+
+  <!-- RecallOS Mode -->
+  <div class="toggle-row">
+    <div class="toggle-info">
+      <span class="toggle-label">RecallOS Mode</span>
+      <span class="toggle-hint">Organizes output for <code>recallos ingest</code></span>
+    </div>
+    <label class="toggle">
+      <input type="checkbox" id="recallos-toggle">
+      <span class="toggle-slider"></span>
+    </label>
+  </div>
+
+  <!-- Export Button -->
+  <button class="export-btn" id="export-btn">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+      <polyline points="7 10 12 15 17 10"/>
+      <line x1="12" y1="15" x2="12" y2="3"/>
+    </svg>
+    Export Conversation
+  </button>
+
+  <!-- Status -->
+  <div id="status" class="status hidden"></div>
+</div>
+
+<div class="footer">
+  <a href="#" id="browse-link">Browse &amp; Bulk Export →</a>
+</div>
+
+<script src="popup.js"></script>
+</body>
+</html>

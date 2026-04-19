@@ -1,0 +1,12 @@
+# Distribution builds
+dist/
+
+# OS clutter
+Thumbs.db
+.DS_Store
+desktop.ini
+
+# Editor
+.vscode/
+*.suo
+*.user

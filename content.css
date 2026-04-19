@@ -1,0 +1,86 @@
+/* VaultExport — content.css */
+
+/* Export Button */
+.vaultexport-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  background: #7c3aed;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-left: 8px;
+  transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+  vertical-align: middle;
+  line-height: 1;
+  white-space: nowrap;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  z-index: 999;
+  position: relative;
+}
+
+.vaultexport-btn:hover {
+  background: #6d28d9;
+  box-shadow: 0 3px 8px rgba(124, 58, 237, 0.4);
+  transform: translateY(-1px);
+}
+
+.vaultexport-btn:active {
+  background: #5b21b6;
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+.vaultexport-btn svg {
+  flex-shrink: 0;
+}
+
+/* Toast Notification */
+#vaultexport-toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(16px);
+  background: #1e293b;
+  color: #e2e8f0;
+  padding: 11px 20px;
+  border-radius: 8px;
+  font-size: 13.5px;
+  font-weight: 500;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  z-index: 2147483647;
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  pointer-events: none;
+  max-width: 420px;
+  text-align: center;
+  border: 1px solid #334155;
+  line-height: 1.4;
+}
+
+#vaultexport-toast.vaultexport-toast--visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+#vaultexport-toast.vaultexport-toast--success {
+  border-color: #22c55e;
+  background: #14532d;
+  color: #bbf7d0;
+}
+
+#vaultexport-toast.vaultexport-toast--error {
+  border-color: #ef4444;
+  background: #450a0a;
+  color: #fecaca;
+}
+
+#vaultexport-toast.vaultexport-toast--info {
+  border-color: #60a5fa;
+}

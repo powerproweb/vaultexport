@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>VaultExport — Browse Conversations</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #0f0f17; color: #dde1ec; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; min-height: 100vh; }
+
+    /* HEADER */
+    .header { display: flex; align-items: center; justify-content: space-between; padding: 14px 24px; background: #0a0a12; border-bottom: 1px solid #1e293b; position: sticky; top: 0; z-index: 10; }
+    .header-left { display: flex; align-items: center; gap: 12px; }
+    .logo { font-size: 16px; font-weight: 700; color: #c4b5fd; }
+    .platform-badge { padding: 2px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+    .platform-chatgpt { background: #0c2a1e; color: #4ade80; border: 1px solid #16a34a; }
+    .platform-claude  { background: #1e0d30; color: #c4b5fd; border: 1px solid #7c3aed; }
+    .conv-count { font-size: 12px; color: #64748b; }
+
+    /* TOOLBAR */
+    .toolbar { display: flex; align-items: center; gap: 10px; padding: 12px 24px; background: #0d1117; border-bottom: 1px solid #1e293b; flex-wrap: wrap; }
+    .search-box { flex: 1; min-width: 180px; padding: 7px 12px; background: #1e293b; border: 1px solid #334155; border-radius: 7px; color: #dde1ec; font-size: 13px; font-family: inherit; }
+    .search-box:focus { outline: none; border-color: #7c3aed; }
+    .search-box::placeholder { color: #64748b; }
+    select { padding: 7px 10px; background: #1e293b; border: 1px solid #334155; border-radius: 7px; color: #dde1ec; font-size: 12.5px; font-family: inherit; cursor: pointer; }
+    select:focus { outline: none; border-color: #7c3aed; }
+
+    .btn { padding: 7px 16px; border-radius: 7px; font-size: 13px; font-weight: 700; cursor: pointer; border: none; font-family: inherit; transition: all 0.15s; }
+    .btn-primary   { background: #7c3aed; color: #fff; }
+    .btn-primary:hover { background: #6d28d9; }
+    .btn-secondary { background: #1e293b; color: #94a3b8; border: 1px solid #334155; }
+    .btn-secondary:hover { background: #263448; }
+    .btn-danger    { background: #7f1d1d; color: #fca5a5; border: 1px solid #ef4444; }
+    .btn-danger:hover { background: #991b1b; }
+    .btn:disabled  { opacity: 0.45; cursor: not-allowed; }
+
+    /* BULK CONTROLS */
+    .bulk-bar { display: flex; align-items: center; gap: 10px; padding: 8px 24px; background: #1e0d30; border-bottom: 1px solid #4c1d95; font-size: 13px; color: #c4b5fd; }
+    .bulk-bar.hidden { display: none; }
+    .selected-count { font-weight: 700; }
+
+    /* TOGGLE ROW */
+    .toggle-row { display: flex; align-items: center; gap: 7px; font-size: 12.5px; color: #94a3b8; }
+    .toggle-row input { accent-color: #7c3aed; }
+
+    /* TABLE */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    thead th { padding: 10px 16px; text-align: left; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #64748b; background: #0a0a12; border-bottom: 1px solid #1e293b; white-space: nowrap; }
+    thead th:first-child { width: 40px; }
+    tbody tr { border-bottom: 1px solid #1a1f2e; transition: background 0.1s; cursor: pointer; }
+    tbody tr:hover { background: #13131f; }
+    tbody tr.selected { background: #1e0d30; }
+    td { padding: 10px 16px; font-size: 13px; vertical-align: middle; }
+    td.title-cell { max-width: 340px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
+    td.date-cell  { color: #64748b; font-size: 12px; white-space: nowrap; }
+    td.model-cell { color: #94a3b8; font-size: 11.5px; font-family: monospace; }
+    .cb { accent-color: #7c3aed; width: 14px; height: 14px; cursor: pointer; }
+
+    /* EMPTY / LOADING */
+    .empty-state { text-align: center; padding: 60px 24px; color: #64748b; }
+    .empty-state .icon { font-size: 36px; margin-bottom: 12px; }
+    .loading-spinner { display: inline-block; width: 20px; height: 20px; border: 2.5px solid #334155; border-top-color: #7c3aed; border-radius: 50%; animation: spin 0.7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* PROGRESS */
+    .progress-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 100; align-items: center; justify-content: center; }
+    .progress-overlay.visible { display: flex; }
+    .progress-box { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 28px 32px; width: 380px; text-align: center; }
+    .progress-box h3 { font-size: 16px; color: #c4b5fd; margin-bottom: 16px; }
+    .progress-bar-wrap { background: #0d1117; border-radius: 999px; height: 8px; margin: 14px 0 10px; overflow: hidden; }
+    .progress-bar { height: 100%; background: #7c3aed; border-radius: 999px; transition: width 0.3s; }
+    .progress-text { font-size: 13px; color: #94a3b8; }
+    .progress-detail { font-size: 11.5px; color: #64748b; margin-top: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <span class="logo">⬇️ VaultExport</span>
+    <span id="platform-badge" class="platform-badge">—</span>
+    <span id="conv-count" class="conv-count"></span>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center">
+    <button class="btn btn-secondary" id="refresh-btn">↺ Refresh</button>
+    <select id="sort-select">
+      <option value="updated">Sort: Recently Updated</option>
+      <option value="created">Sort: Date Created</option>
+      <option value="title">Sort: Title A–Z</option>
+    </select>
+  </div>
+</div>
+
+<div class="toolbar">
+  <input type="text" class="search-box" id="search" placeholder="Search conversations…">
+  <select id="format-select">
+    <option value="markdown">Markdown .md</option>
+    <option value="json">JSON .json</option>
+    <option value="html">HTML .html</option>
+    <option value="text">Text .txt</option>
+    <option value="csv">CSV .csv</option>
+  </select>
+  <div class="toggle-row">
+    <input type="checkbox" id="recallos-toggle">
+    <label for="recallos-toggle">RecallOS Mode</label>
+  </div>
+  <button class="btn btn-secondary" id="select-all-btn">Select All</button>
+</div>
+
+<div class="bulk-bar hidden" id="bulk-bar">
+  <span><span class="selected-count" id="selected-count">0</span> selected</span>
+  <button class="btn btn-primary" id="export-selected-btn">⬇️ Export Selected (ZIP)</button>
+  <button class="btn btn-secondary" id="deselect-btn">✕ Deselect All</button>
+</div>
+
+<div class="table-wrap">
+  <div id="loading" class="empty-state"><div class="loading-spinner"></div><div style="margin-top:14px">Loading conversations…</div></div>
+  <div id="empty" class="empty-state hidden"><div class="icon">💬</div><div>No conversations found.</div></div>
+  <div id="error-state" class="empty-state hidden" style="color:#fca5a5"></div>
+
+  <table id="conv-table" class="hidden">
+    <thead>
+      <tr>
+        <th><input type="checkbox" class="cb" id="header-cb" title="Select all visible"></th>
+        <th>Title</th>
+        <th>Updated</th>
+        <th>Created</th>
+        <th>Model</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody id="conv-tbody"></tbody>
+  </table>
+</div>
+
+<!-- Progress overlay -->
+<div class="progress-overlay" id="progress-overlay">
+  <div class="progress-box">
+    <h3>Exporting Conversations…</h3>
+    <div class="progress-bar-wrap"><div class="progress-bar" id="progress-bar" style="width:0%"></div></div>
+    <div class="progress-text" id="progress-text">0 / 0</div>
+    <div class="progress-detail" id="progress-detail">Starting…</div>
+    <div style="margin-top:20px;font-size:12px;color:#64748b">Files will be saved as a ZIP when complete</div>
+  </div>
+</div>
+
+<script src="browse.js"></script>
+</body>
+</html>
