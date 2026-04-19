@@ -92,15 +92,24 @@ async function fetchChatGPT(path) {
     },
   });
   if (res.status === 401) {
-    _chatgptToken = null; // Clear cached token on 401
+    _chatgptToken = null;
     throw new Error('ChatGPT session expired. Please reload the chatgpt.com tab and try again.');
   }
-  if (!res.ok) throw new Error(`ChatGPT API error ${res.status}: ${res.statusText}`);
+  if (!res.ok) throw new Error(`ChatGPT API error ${res.status} on ${path}`);
   return res.json();
 }
 
 async function fetchChatGPTConversation(id) {
-  return fetchChatGPT(`/backend-api/conversation/${id}`);
+  if (!id) throw new Error('No conversation ID found in URL. Navigate to a specific chat (URL must contain /c/...).');
+  // Try singular first, fall back to plural (ChatGPT has used both)
+  try {
+    return await fetchChatGPT(`/backend-api/conversation/${id}`);
+  } catch (e) {
+    if (e.message.includes('404')) {
+      return await fetchChatGPT(`/backend-api/conversations/${id}`);
+    }
+    throw e;
+  }
 }
 
 async function listChatGPTConversations() {
