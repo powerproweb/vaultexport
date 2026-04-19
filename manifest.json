@@ -5,6 +5,7 @@
   "description": "Export ChatGPT & Claude conversations to Markdown, JSON, DOCX, HTML, CSV, and more. RecallOS-ready. 100% local, no data leaves your browser.",
   "permissions": [
     "activeTab",
+    "tabs",
     "storage",
     "downloads"
   ],

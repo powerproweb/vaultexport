@@ -23,6 +23,11 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 // CONTEXT DETECTION
 // =====================================================================
 async function handleGetContext(tab) {
+  // When called from popup, sender.tab is undefined — query the active tab instead
+  if (!tab) {
+    const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    tab = activeTab;
+  }
   if (!tab?.url) return { platform: null, conversationId: null };
   const url = tab.url;
 
