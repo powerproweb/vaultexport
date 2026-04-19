@@ -461,18 +461,29 @@ function sanitize(name) {
 
 const EXT = { markdown: 'md', json: 'json', text: 'txt', html: 'html', csv: 'csv' };
 
-async function triggerDownload(content, filename, mimeType = 'text/plain;charset=utf-8') {
-  const blob = content instanceof Blob ? content : new Blob([content], { type: mimeType });
-  const url = URL.createObjectURL(blob);
-  const id = await chrome.downloads.download({ url, filename, saveAs: false });
-  // Revoke after short delay
-  chrome.downloads.onChanged.addListener(function cleanup(delta) {
-    if (delta.id === id && delta.state?.current === 'complete') {
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
-      chrome.downloads.onChanged.removeListener(cleanup);
-    }
-  });
-  return id;
+async function triggerDownload(content, filename) {
+  let url;
+  if (content instanceof Blob) {
+    // ZIP blob — convert to base64 data URL (URL.createObjectURL not available in MV3 service workers)
+    const buffer = await content.arrayBuffer();
+    const base64 = arrayBufferToBase64(buffer);
+    url = `data:application/zip;base64,${base64}`;
+  } else {
+    // Text content — encode as data URL
+    url = `data:text/plain;charset=utf-8,${encodeURIComponent(String(content))}`;
+  }
+  return chrome.downloads.download({ url, filename, saveAs: false });
+}
+
+function arrayBufferToBase64(buffer) {
+  const bytes = new Uint8Array(buffer);
+  let binary = '';
+  // Process in chunks to avoid call stack limits on large files
+  const chunk = 8192;
+  for (let i = 0; i < bytes.length; i += chunk) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
+  }
+  return btoa(binary);
 }
 
 // =====================================================================
