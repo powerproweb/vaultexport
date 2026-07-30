@@ -21,3 +21,16 @@ auth_for_sites_in_dev.md*
 # Claude Code local state
 .claude/
 .claude-flow/
+
+# -----------------------------------------------------------------------
+# NO_INDEX FOLDERS - nothing under these is ever tracked
+# -----------------------------------------------------------------------
+# 01_build_files_no_index/ is the drop zone for any part of the build that
+# must not reach the remote: handoffs, build notes, credentials, concept
+# art, client paths. A folder named no_index is not indexed; the name is
+# the instruction and it is binding on its own.
+#
+# The whole folder is ignored, including any .gitkeep, so the rule has no
+# exceptions and needs no carve-outs. Recreate the folder on a fresh clone.
+01_build_files_no_index/
+*_no_index/
